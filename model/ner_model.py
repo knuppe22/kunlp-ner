@@ -61,14 +61,26 @@ class NERModel(BaseModel):
 
         """
         # perform padding of the given data
-        
-        word_ids, sequence_lengths = pad_sequences(words, 0)
+        if self.config.use_chars:
+            [chars, words] = list(zip(*words))
+            char_ids, word_lengths = pad_sequences(chars, 0, 2)
+            word_ids, sequence_lengths = pad_sequences(words, 0)
+        else:
+            word_ids, sequence_lengths = pad_sequences(words, 0)
 
         # build feed dictionary
-        feed = {
-            self.word_ids: word_ids,
-            self.sequence_lengths: sequence_lengths
-        }
+        if self.config.use_chars:
+            feed = {
+                self.char_ids: char_ids,
+                self.word_lengths: word_lengths,
+                self.word_ids: word_ids,
+                self.sequence_lengths: sequence_lengths
+            }
+        else:
+            feed = {
+                self.word_ids: word_ids,
+                self.sequence_lengths: sequence_lengths
+            }
 
         if labels is not None:
             labels, _ = pad_sequences(labels, 0)

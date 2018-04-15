@@ -247,6 +247,15 @@ def get_processing_word(vocab_words=None, vocab_chars=None,
 
     """
     def f(word):
+        if chars and vocab_chars is not None:
+            char_list = []
+            for char in word:
+                if char in vocab_chars:
+                    char_list.append(vocab_chars[char])
+                else:
+                    raise Exception("Unknow key is not allowed. Check that "\
+                                    "your vocab (chars?) is correct")
+
         # 1. preprocess word
         if lowercase:
             word = word.lower()
@@ -263,8 +272,11 @@ def get_processing_word(vocab_words=None, vocab_chars=None,
                 else:
                     raise Exception("Unknow key is not allowed. Check that "\
                                     "your vocab (tags?) is correct")
-      
-        return word
+
+        if chars and vocab_chars is not None:
+            return char_list, word
+        else:
+            return word
 
     return f
 
