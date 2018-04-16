@@ -112,6 +112,11 @@ class NERModel(BaseModel):
             word_embeddings = tf.nn.embedding_lookup(_word_embeddings,
                     self.word_ids, name="word_embeddings")
             
+            with tf.variable_scope("char-lstm"):
+                if self.config.use_chars:
+                    char_fw = tf.contrib.rnn.LSTMCell(self.config.hidden_size_char)
+                    char_bw = tf.contrib.rnn.LSTMCell(self.config.hidden_size_char)
+            
             # shape = (batch_size, max length of sentence in batch, word dimension)
             self.word_embeddings =  tf.nn.dropout(word_embeddings, self.dropout)
 
