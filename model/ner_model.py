@@ -114,8 +114,29 @@ class NERModel(BaseModel):
             
             with tf.variable_scope("char-lstm"):
                 if self.config.use_chars:
-                    char_fw = tf.contrib.rnn.LSTMCell(self.config.hidden_size_char)
-                    char_bw = tf.contrib.rnn.LSTMCell(self.config.hidden_size_char)
+                    # initialize char_embeddings
+                    _char_embeddings = tf.get_variable(
+                            name="_char_embeddings",
+                            dtype=tf.float32,
+                            shape=[self.config.nchars, self.config.dim_char])
+                    char_embeddings = tf.nn.embedding_lookup(_char_embeddings,
+                            self.char_ids, name="char_embeddings")
+                    # reshaping for lstm
+                    shape = tf.shape(char_embeddings)
+                    char_embeddings = tf.reshape(char_embeddings, [-1, shape[2], self.config.dim_char])
+
+                    # character level bi-lstm
+                    ch_cell_fw = tf.contrib.rnn.LSTMCell(self.config.hidden_size_char)
+                    ch_cell_bw = tf.contrib.rnn.LSTMCell(self.config.hidden_size_char)
+                    _, ((_, ch_output_fw), (_, ch_output_bw)) = tf.nn.bidirectional_dynamic_rnn(
+                            ch_cell_fw, ch_cell_bw, char_embeddings,
+                            sequence_length=tf.reshape(self.word_lengths, [-1]),
+                            dtype=tf.float32)
+                    ch_output = tf.concat([ch_output_fw, ch_output_bw], axis=-1)
+                    # reshaping for concatenation
+                    we_shape = tf.shape(word_embeddings)
+                    ch_output = tf.reshape(ch_output, [we_shape[0], we_shape[1], 2*self.config.dim_char])
+                    word_embeddings = tf.concat([word_embeddings, ch_output], -1)
             
             # shape = (batch_size, max length of sentence in batch, word dimension)
             self.word_embeddings =  tf.nn.dropout(word_embeddings, self.dropout)
