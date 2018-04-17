@@ -252,9 +252,6 @@ def get_processing_word(vocab_words=None, vocab_chars=None,
             for char in word:
                 if char in vocab_chars:
                     char_list.append(vocab_chars[char])
-                else:
-                    raise Exception("Unknow key is not allowed. Check that "\
-                                    "your vocab (chars?) is correct")
 
         # 1. preprocess word
         if lowercase:
